@@ -52,14 +52,10 @@ impl SpeedTest {
 
     async fn try_download(&self, url: &str) -> Result<f64> {
         let start = Instant::now();
-        let response = self.client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| {
-                log::error!("Failed to connect to download server: {}", e);
-                e
-            })?;
+        let response = self.client.get(url).send().await.map_err(|e| {
+            log::error!("Failed to connect to download server: {}", e);
+            e
+        })?;
 
         if !response.status().is_success() {
             return Err(SpeedTestError::TestFailed(format!(
@@ -82,10 +78,7 @@ impl SpeedTest {
         let elapsed = start.elapsed().as_secs_f64();
         let bytes_per_second = total_bytes as f64 / elapsed;
 
-        debug!(
-            "Downloaded {} bytes in {:.2} seconds",
-            total_bytes, elapsed
-        );
+        debug!("Downloaded {} bytes in {:.2} seconds", total_bytes, elapsed);
         info!("Download test completed: {:.2} bytes/s", bytes_per_second);
 
         Ok(bytes_per_second)
@@ -98,7 +91,8 @@ impl SpeedTest {
         let data_len = data.len() as u64;
 
         let start = Instant::now();
-        let response = self.client
+        let response = self
+            .client
             .post(UPLOAD_TEST_URL)
             .body(data)
             .send()

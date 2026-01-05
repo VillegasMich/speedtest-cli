@@ -11,9 +11,11 @@ pub enum SpeedTestError {
     #[error("Test failed: {0}")]
     TestFailed(String),
 
+    #[allow(dead_code)]
     #[error("Invalid configuration: {0}")]
     InvalidConfig(String),
 
+    #[allow(dead_code)]
     #[error("Timeout occurred during speed test")]
     Timeout,
 }
