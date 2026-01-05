@@ -51,3 +51,29 @@ pub fn print_error(error: &SpeedTestError) {
 pub fn print_progress(message: &str) {
     println!("{} {}", "=>".bold().blue(), message);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_speed_test_result_new() {
+        let result = SpeedTestResult::new(Some(1000.0), Some(500.0));
+        assert_eq!(result.download_speed, Some(1000.0));
+        assert_eq!(result.upload_speed, Some(500.0));
+    }
+
+    #[test]
+    fn test_speed_test_result_download_only() {
+        let result = SpeedTestResult::new(Some(1000.0), None);
+        assert_eq!(result.download_speed, Some(1000.0));
+        assert_eq!(result.upload_speed, None);
+    }
+
+    #[test]
+    fn test_speed_test_result_upload_only() {
+        let result = SpeedTestResult::new(None, Some(500.0));
+        assert_eq!(result.download_speed, None);
+        assert_eq!(result.upload_speed, Some(500.0));
+    }
+}

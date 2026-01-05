@@ -1,7 +1,7 @@
-use clap::{Parser, Subcommand, ValueEnum};
 use crate::error::Result;
 use crate::output::{print_error, print_progress, print_success, SpeedTestResult};
 use crate::speedtest::SpeedTest;
+use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(name = "speedtest-cli")]
@@ -107,4 +107,49 @@ async fn run_download_test(speed_test: &SpeedTest) -> Result<SpeedTestResult> {
 async fn run_upload_test(speed_test: &SpeedTest) -> Result<SpeedTestResult> {
     let upload = speed_test.test_upload().await?;
     Ok(SpeedTestResult::new(None, Some(upload)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_speed_unit_convert_bps() {
+        let unit = SpeedUnit::Bps;
+        let bytes_per_second = 1000.0;
+        let result = unit.convert(bytes_per_second);
+        assert_eq!(result, 8000.0); // 1000 bytes/s = 8000 bits/s
+    }
+
+    #[test]
+    fn test_speed_unit_convert_kbps() {
+        let unit = SpeedUnit::Kbps;
+        let bytes_per_second = 1000.0;
+        let result = unit.convert(bytes_per_second);
+        assert_eq!(result, 8.0); // 1000 bytes/s = 8 Kbps
+    }
+
+    #[test]
+    fn test_speed_unit_convert_mbps() {
+        let unit = SpeedUnit::Mbps;
+        let bytes_per_second = 1_000_000.0;
+        let result = unit.convert(bytes_per_second);
+        assert_eq!(result, 8.0); // 1,000,000 bytes/s = 8 Mbps
+    }
+
+    #[test]
+    fn test_speed_unit_convert_gbps() {
+        let unit = SpeedUnit::Gbps;
+        let bytes_per_second = 1_000_000_000.0;
+        let result = unit.convert(bytes_per_second);
+        assert_eq!(result, 8.0); // 1,000,000,000 bytes/s = 8 Gbps
+    }
+
+    #[test]
+    fn test_speed_unit_as_str() {
+        assert_eq!(SpeedUnit::Bps.as_str(), "bps");
+        assert_eq!(SpeedUnit::Kbps.as_str(), "Kbps");
+        assert_eq!(SpeedUnit::Mbps.as_str(), "Mbps");
+        assert_eq!(SpeedUnit::Gbps.as_str(), "Gbps");
+    }
 }
