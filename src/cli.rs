@@ -1,7 +1,9 @@
-use clap::{Parser, Subcommand, ValueEnum};
 use crate::error::Result;
-use crate::output::{print_error, print_progress, print_success, SpeedTestResult};
+use crate::output::{
+    create_progress_bar, create_progress_callback, print_error, print_success, SpeedTestResult,
+};
 use crate::speedtest::SpeedTest;
+use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser, Debug)]
 #[command(name = "speedtest-cli")]
@@ -21,18 +23,9 @@ impl Cli {
     pub async fn execute(&self) -> Result<()> {
         let speed_test = SpeedTest::new();
         let result = match self.command {
-            Commands::Start => {
-                print_progress("Running full speed test (download + upload)...");
-                run_full_test(&speed_test).await
-            }
-            Commands::Download => {
-                print_progress("Running download speed test...");
-                run_download_test(&speed_test).await
-            }
-            Commands::Upload => {
-                print_progress("Running upload speed test...");
-                run_upload_test(&speed_test).await
-            }
+            Commands::Start => run_full_test(&speed_test, self.unit).await,
+            Commands::Download => run_download_test(&speed_test, self.unit).await,
+            Commands::Upload => run_upload_test(&speed_test, self.unit).await,
         };
 
         match result {
@@ -94,17 +87,43 @@ impl SpeedUnit {
     }
 }
 
-async fn run_full_test(speed_test: &SpeedTest) -> Result<SpeedTestResult> {
-    let (download, upload) = speed_test.test_both().await?;
+async fn run_full_test(speed_test: &SpeedTest, unit: SpeedUnit) -> Result<SpeedTestResult> {
+    // Download test with progress
+    let download_pb = create_progress_bar("Testing download speed", unit);
+    let download_callback =
+        create_progress_callback(download_pb.clone(), "Testing download speed", unit);
+    let download = speed_test
+        .test_download_with_progress(Some(download_callback))
+        .await?;
+    download_pb.finish_with_message("✔ Testing download speed".to_string());
+
+    // Upload test with progress
+    let upload_pb = create_progress_bar("Testing upload speed", unit);
+    let upload_callback = create_progress_callback(upload_pb.clone(), "Testing upload speed", unit);
+    let upload = speed_test
+        .test_upload_with_progress(Some(upload_callback))
+        .await?;
+    upload_pb.finish_with_message("✔ Testing upload speed".to_string());
+
     Ok(SpeedTestResult::new(Some(download), Some(upload)))
 }
 
-async fn run_download_test(speed_test: &SpeedTest) -> Result<SpeedTestResult> {
-    let download = speed_test.test_download().await?;
+async fn run_download_test(speed_test: &SpeedTest, unit: SpeedUnit) -> Result<SpeedTestResult> {
+    let pb = create_progress_bar("Testing download speed", unit);
+    let callback = create_progress_callback(pb.clone(), "Testing download speed", unit);
+    let download = speed_test
+        .test_download_with_progress(Some(callback))
+        .await?;
+    pb.finish_with_message("✔ Testing download speed".to_string());
+
     Ok(SpeedTestResult::new(Some(download), None))
 }
 
-async fn run_upload_test(speed_test: &SpeedTest) -> Result<SpeedTestResult> {
-    let upload = speed_test.test_upload().await?;
+async fn run_upload_test(speed_test: &SpeedTest, unit: SpeedUnit) -> Result<SpeedTestResult> {
+    let pb = create_progress_bar("Testing upload speed", unit);
+    let callback = create_progress_callback(pb.clone(), "Testing upload speed", unit);
+    let upload = speed_test.test_upload_with_progress(Some(callback)).await?;
+    pb.finish_with_message("✔ Testing upload speed".to_string());
+
     Ok(SpeedTestResult::new(None, Some(upload)))
 }

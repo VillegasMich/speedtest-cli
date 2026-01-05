@@ -2,7 +2,7 @@ use crate::error::{Result, SpeedTestError};
 use futures_util::StreamExt;
 use log::{debug, info};
 use reqwest::Client;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 // Using multiple test file URLs for download testing
 const DOWNLOAD_TEST_URLS: &[&str] = &[
@@ -13,6 +13,9 @@ const DOWNLOAD_TEST_URLS: &[&str] = &[
 
 const UPLOAD_TEST_URL: &str = "https://httpbin.org/post";
 const UPLOAD_SIZE_MB: usize = 5;
+const PROGRESS_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
+
+pub type ProgressCallback = Box<dyn Fn(f64) + Send + Sync>;
 
 pub struct SpeedTest {
     client: Client,
@@ -28,7 +31,15 @@ impl SpeedTest {
         Self { client }
     }
 
+    #[allow(dead_code)]
     pub async fn test_download(&self) -> Result<f64> {
+        self.test_download_with_progress(None).await
+    }
+
+    pub async fn test_download_with_progress(
+        &self,
+        progress_callback: Option<ProgressCallback>,
+    ) -> Result<f64> {
         info!("Starting download speed test...");
 
         // Try multiple URLs until one works
@@ -36,7 +47,7 @@ impl SpeedTest {
         for url in DOWNLOAD_TEST_URLS {
             debug!("Attempting download from: {}", url);
 
-            match self.try_download(url).await {
+            match self.try_download(url, progress_callback.as_ref()).await {
                 Ok(speed) => return Ok(speed),
                 Err(e) => {
                     log::warn!("Failed to download from {}: {}", url, e);
@@ -50,16 +61,16 @@ impl SpeedTest {
         }))
     }
 
-    async fn try_download(&self, url: &str) -> Result<f64> {
+    async fn try_download(
+        &self,
+        url: &str,
+        progress_callback: Option<&ProgressCallback>,
+    ) -> Result<f64> {
         let start = Instant::now();
-        let response = self.client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| {
-                log::error!("Failed to connect to download server: {}", e);
-                e
-            })?;
+        let response = self.client.get(url).send().await.map_err(|e| {
+            log::error!("Failed to connect to download server: {}", e);
+            e
+        })?;
 
         if !response.status().is_success() {
             return Err(SpeedTestError::TestFailed(format!(
@@ -70,6 +81,7 @@ impl SpeedTest {
 
         let mut stream = response.bytes_stream();
         let mut total_bytes = 0u64;
+        let mut last_update = Instant::now();
 
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| {
@@ -77,28 +89,72 @@ impl SpeedTest {
                 e
             })?;
             total_bytes += chunk.len() as u64;
+
+            // Report progress if callback is provided
+            if let Some(callback) = progress_callback {
+                if last_update.elapsed() >= PROGRESS_UPDATE_INTERVAL {
+                    let elapsed = start.elapsed().as_secs_f64();
+                    if elapsed > 0.0 {
+                        let current_speed = total_bytes as f64 / elapsed;
+                        callback(current_speed);
+                        last_update = Instant::now();
+                    }
+                }
+            }
         }
 
         let elapsed = start.elapsed().as_secs_f64();
         let bytes_per_second = total_bytes as f64 / elapsed;
 
-        debug!(
-            "Downloaded {} bytes in {:.2} seconds",
-            total_bytes, elapsed
-        );
+        debug!("Downloaded {} bytes in {:.2} seconds", total_bytes, elapsed);
         info!("Download test completed: {:.2} bytes/s", bytes_per_second);
 
         Ok(bytes_per_second)
     }
 
+    #[allow(dead_code)]
     pub async fn test_upload(&self) -> Result<f64> {
+        self.test_upload_with_progress(None).await
+    }
+
+    pub async fn test_upload_with_progress(
+        &self,
+        progress_callback: Option<ProgressCallback>,
+    ) -> Result<f64> {
         info!("Starting upload speed test...");
 
         let data = vec![0u8; UPLOAD_SIZE_MB * 1024 * 1024];
         let data_len = data.len() as u64;
 
         let start = Instant::now();
-        let response = self.client
+
+        // For upload, we'll simulate progress updates since reqwest doesn't provide
+        // easy upload progress tracking. We'll update periodically during the upload.
+        let progress_handle = if let Some(callback) = progress_callback {
+            let start_clone = start;
+            Some(tokio::spawn(async move {
+                let mut last_update = Instant::now();
+                loop {
+                    tokio::time::sleep(PROGRESS_UPDATE_INTERVAL).await;
+                    if last_update.elapsed() >= PROGRESS_UPDATE_INTERVAL {
+                        let elapsed = start_clone.elapsed().as_secs_f64();
+                        if elapsed > 0.0 {
+                            // Estimate based on time elapsed
+                            let estimated_bytes =
+                                (data_len as f64 * elapsed / 3.0).min(data_len as f64);
+                            let current_speed = estimated_bytes / elapsed;
+                            callback(current_speed);
+                            last_update = Instant::now();
+                        }
+                    }
+                }
+            }))
+        } else {
+            None
+        };
+
+        let response = self
+            .client
             .post(UPLOAD_TEST_URL)
             .body(data)
             .send()
@@ -107,6 +163,11 @@ impl SpeedTest {
                 log::error!("Failed to connect to upload server: {}", e);
                 e
             })?;
+
+        // Stop progress updates
+        if let Some(handle) = progress_handle {
+            handle.abort();
+        }
 
         if !response.status().is_success() {
             return Err(SpeedTestError::TestFailed(format!(
@@ -124,9 +185,22 @@ impl SpeedTest {
         Ok(bytes_per_second)
     }
 
+    #[allow(dead_code)]
     pub async fn test_both(&self) -> Result<(f64, f64)> {
         let download_speed = self.test_download().await?;
         let upload_speed = self.test_upload().await?;
+
+        Ok((download_speed, upload_speed))
+    }
+
+    #[allow(dead_code)]
+    pub async fn test_both_with_progress(
+        &self,
+        download_callback: Option<ProgressCallback>,
+        upload_callback: Option<ProgressCallback>,
+    ) -> Result<(f64, f64)> {
+        let download_speed = self.test_download_with_progress(download_callback).await?;
+        let upload_speed = self.test_upload_with_progress(upload_callback).await?;
 
         Ok((download_speed, upload_speed))
     }

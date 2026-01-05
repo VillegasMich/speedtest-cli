@@ -7,9 +7,10 @@ A fast and simple command-line tool to test your internet connection speed, writ
 - **Download Speed Test**: Measure your download speed
 - **Upload Speed Test**: Measure your upload speed
 - **Full Speed Test**: Run both download and upload tests
+- **Real-Time Speed Display**: Live speed measurements with animated progress indicators
 - **Multiple Units**: Display results in bps, Kbps, Mbps, or Gbps
 - **Verbose Logging**: Debug mode for detailed test information
-- **Colorful Output**: Easy-to-read colored terminal output
+- **Colorful Output**: Easy-to-read colored terminal output with animated spinners
 
 ## Installation
 
@@ -23,7 +24,7 @@ cargo install speedtest-cli
 
 Clone and build:
 ```bash
-git clone https://github.com/yourusername/speedtest-cli.git
+git clone https://github.com/VillegasMich/speedtest-cli.git
 cd speedtest-cli
 cargo build --release
 ```
@@ -34,7 +35,7 @@ The binary will be available at `target/release/speedtest-cli`
 
 Build and install in one step:
 ```bash
-git clone https://github.com/yourusername/speedtest-cli.git
+git clone https://github.com/VillegasMich/speedtest-cli.git
 cd speedtest-cli
 cargo install --path .
 ```
@@ -122,13 +123,18 @@ speedtest-cli upload --help
 ## Sample Output
 
 ```
-=> Running full speed test (download + upload)...
+⠹ Testing download speed - 45.23 Mbps
+✔ Testing download speed
+⠹ Testing upload speed - 24.87 Mbps
+✔ Testing upload speed
 
 Speed Test Results
 ===================
 Download Speed: 48.42 Mbps
 Upload Speed:   25.08 Mbps
 ```
+
+The spinner (⠹) animates while testing and shows real-time speed updates every 100ms. When complete, it displays a checkmark (✔).
 
 ## Requirements
 
@@ -142,14 +148,17 @@ Upload Speed:   25.08 Mbps
 - `reqwest` - HTTP client
 - `env_logger` & `log` - Logging
 - `colored` - Terminal colors
+- `indicatif` - Progress bars and spinners
 - `thiserror` - Error handling
 - `futures-util` - Async utilities
 
 ## How It Works
 
 The tool performs speed tests by:
-- **Download**: Downloading test files from reliable servers and measuring transfer rate
+- **Download**: Downloading test files from reliable servers and measuring transfer rate in real-time
 - **Upload**: Uploading data to test endpoints and measuring transfer rate
+- **Real-Time Updates**: Speed is calculated and displayed every 100ms during the test
+- **Multiple Fallbacks**: Automatically tries alternative servers if one fails
 
 Results are calculated in bytes per second and converted to your chosen unit.
 
@@ -163,11 +172,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Roadmap
 
+- [x] Real-time progress indicators with animated spinners
 - [ ] Add server selection options
 - [ ] Support for latency/ping tests
 - [ ] JSON output format
 - [ ] Configuration file support
-- [ ] Progress bars for long tests
+- [ ] Historical test results tracking
 
 ---
 

@@ -1,6 +1,7 @@
 use crate::cli::SpeedUnit;
 use crate::error::SpeedTestError;
 use colored::*;
+use indicatif::{ProgressBar, ProgressStyle};
 
 pub struct SpeedTestResult {
     pub download_speed: Option<f64>,
@@ -48,6 +49,27 @@ pub fn print_error(error: &SpeedTestError) {
     log::error!("{}", error);
 }
 
-pub fn print_progress(message: &str) {
-    println!("{} {}", "=>".bold().blue(), message);
+pub fn create_progress_bar(message: &str, _unit: SpeedUnit) -> ProgressBar {
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"])
+            .template("{spinner:.cyan} {msg}")
+            .expect("Failed to set progress bar template"),
+    );
+    pb.set_message(format!("{} - Initializing...", message));
+    pb.enable_steady_tick(std::time::Duration::from_millis(80));
+    pb
+}
+
+pub fn create_progress_callback(
+    pb: ProgressBar,
+    message: &str,
+    unit: SpeedUnit,
+) -> Box<dyn Fn(f64) + Send + Sync> {
+    let message = message.to_string();
+    Box::new(move |speed: f64| {
+        let converted = unit.convert(speed);
+        pb.set_message(format!("{} - {:.2} {}", message, converted, unit.as_str()));
+    })
 }
