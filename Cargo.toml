@@ -2,6 +2,16 @@
 name = "speedtest-cli"
 version = "0.1.0"
 edition = "2021"
+authors = ["Manuel Villegas <manuel.villegas.michel@gmail.com>"]
+description = "A fast and simple CLI tool to test internet connection speed with real-time progress indicators"
+license = "MIT"
+repository = "https://github.com/VillegasMich/speedtest-cli"
+homepage = "https://github.com/VillegasMich/speedtest-cli"
+documentation = "https://docs.rs/speedtest-cli"
+readme = "README.md"
+keywords = ["speedtest", "cli", "network", "bandwidth", "internet"]
+categories = ["command-line-utilities", "network-programming"]
+exclude = [".github/", "target/"]
 
 [dependencies]
 clap = { version = "4.5.54", features = ["derive"] }

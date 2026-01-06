@@ -127,32 +127,6 @@ impl SpeedTest {
         let data_len = data.len() as u64;
 
         let start = Instant::now();
-
-        // For upload, we'll simulate progress updates since reqwest doesn't provide
-        // easy upload progress tracking. We'll update periodically during the upload.
-        let progress_handle = if let Some(callback) = progress_callback {
-            let start_clone = start;
-            Some(tokio::spawn(async move {
-                let mut last_update = Instant::now();
-                loop {
-                    tokio::time::sleep(PROGRESS_UPDATE_INTERVAL).await;
-                    if last_update.elapsed() >= PROGRESS_UPDATE_INTERVAL {
-                        let elapsed = start_clone.elapsed().as_secs_f64();
-                        if elapsed > 0.0 {
-                            // Estimate based on time elapsed
-                            let estimated_bytes =
-                                (data_len as f64 * elapsed / 3.0).min(data_len as f64);
-                            let current_speed = estimated_bytes / elapsed;
-                            callback(current_speed);
-                            last_update = Instant::now();
-                        }
-                    }
-                }
-            }))
-        } else {
-            None
-        };
-
         let response = self
             .client
             .post(UPLOAD_TEST_URL)

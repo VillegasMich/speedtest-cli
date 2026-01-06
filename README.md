@@ -1,6 +1,13 @@
 # speedtest-cli
 
+[![Crates.io](https://img.shields.io/crates/v/speedtest-cli.svg)](https://crates.io/crates/speedtest-cli)
+[![Downloads](https://img.shields.io/crates/d/speedtest-cli.svg)](https://crates.io/crates/speedtest-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/VillegasMich/speedtest-cli/workflows/CI/badge.svg)](https://github.com/VillegasMich/speedtest-cli/actions)
+
 A fast and simple command-line tool to test your internet connection speed, written in Rust.
+
+📦 [View on crates.io](https://crates.io/crates/speedtest-cli)
 
 ## Features
 
@@ -14,7 +21,7 @@ A fast and simple command-line tool to test your internet connection speed, writ
 
 ## Installation
 
-### From crates.io (once published)
+### From crates.io
 
 ```bash
 cargo install speedtest-cli
@@ -168,7 +175,77 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! We appreciate your help in making speedtest-cli better.
+
+### How to Contribute
+
+1. **Fork the repository**
+   - Go to https://github.com/VillegasMich/speedtest-cli
+   - Click the "Fork" button in the top right
+   - This creates a copy of the repository in your GitHub account
+
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/speedtest-cli.git
+   cd speedtest-cli
+   ```
+
+3. **Create a new branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+4. **Make your changes**
+   - Write clean, readable code
+   - Follow Rust best practices and idioms
+   - Add tests for new functionality
+   - Update documentation as needed
+
+5. **Test your changes**
+   ```bash
+   cargo test
+   cargo clippy -- -D warnings
+   cargo fmt -- --check
+   ```
+
+6. **Commit your changes**
+   ```bash
+   git add .
+   git commit -m "feat: add your feature description"
+   ```
+
+7. **Push to your fork**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+8. **Open a Pull Request**
+   - Go to your fork on GitHub
+   - Click "Compare & pull request"
+   - Select the base repository: `VillegasMich/speedtest-cli` and base branch: `main`
+   - Describe your changes clearly
+   - Reference any related issues
+   - Submit the pull request
+
+### Guidelines
+
+- **Code Style**: Follow the existing code style and run `cargo fmt` before committing
+- **Tests**: Add unit tests for new features and bug fixes
+- **Documentation**: Update README and code comments when needed
+- **Commit Messages**: Use clear, descriptive commit messages (e.g., `feat:`, `fix:`, `docs:`)
+- **CI**: Ensure all CI checks pass before requesting review
+
+### Reporting Issues
+
+Found a bug or have a feature request? Please [open an issue](https://github.com/VillegasMich/speedtest-cli/issues) with:
+- A clear description of the problem or feature
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Your environment (OS, Rust version, etc.)
+
+### Code of Conduct
+
+Be respectful and constructive in all interactions. We're here to build something great together!
 
 ## Roadmap
 
