@@ -15,6 +15,7 @@ A fast and simple command-line tool to test your internet connection speed, writ
 - **Upload Speed Test**: Measure your upload speed
 - **Full Speed Test**: Run both download and upload tests
 - **Real-Time Speed Display**: Live speed measurements with animated progress indicators
+- **Configurable Duration**: Set test duration from 1 to any number of seconds (default: 30s)
 - **Multiple Units**: Display results in bps, Kbps, Mbps, or Gbps
 - **Verbose Logging**: Debug mode for detailed test information
 - **Colorful Output**: Easy-to-read colored terminal output with animated spinners
@@ -92,6 +93,20 @@ Available units:
 - `mbps` - megabits per second (default)
 - `gbps` - gigabits per second
 
+#### Test Duration
+
+Use the `--duration` or `-t` flag to specify how long each test should run (in seconds):
+
+```bash
+speedtest-cli start --duration 60   # Run each test for 60 seconds
+speedtest-cli download -t 15        # Run download test for 15 seconds
+speedtest-cli start                 # Default: 30 seconds per test
+```
+
+- Default: 30 seconds
+- Longer durations provide more accurate results
+- Each test (download and upload) runs for the specified duration
+
 #### Verbose Mode
 
 Enable detailed logging with the `--verbose` or `-v` flag:
@@ -104,7 +119,7 @@ speedtest-cli download -v
 ### Examples
 
 ```bash
-# Quick download test with default settings
+# Quick download test with default settings (30 seconds)
 speedtest-cli download
 
 # Full test showing results in Kbps
@@ -115,6 +130,15 @@ speedtest-cli upload -v
 
 # Download test in Gbps with debug info
 speedtest-cli download --unit gbps --verbose
+
+# 60-second test for more accurate results
+speedtest-cli start --duration 60
+
+# Quick 10-second download test in Mbps
+speedtest-cli download -t 10 -u mbps
+
+# Combined options: 45-second test with verbose logging
+speedtest-cli start --duration 45 --unit kbps --verbose
 ```
 
 ### Help
