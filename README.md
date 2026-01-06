@@ -14,9 +14,11 @@ A fast and simple command-line tool to test your internet connection speed, writ
 - **Download Speed Test**: Measure your download speed
 - **Upload Speed Test**: Measure your upload speed
 - **Full Speed Test**: Run both download and upload tests
+- **Real-Time Speed Display**: Live speed measurements with animated progress indicators
+- **Configurable Duration**: Set test duration from 1 to any number of seconds (default: 30s)
 - **Multiple Units**: Display results in bps, Kbps, Mbps, or Gbps
 - **Verbose Logging**: Debug mode for detailed test information
-- **Colorful Output**: Easy-to-read colored terminal output
+- **Colorful Output**: Easy-to-read colored terminal output with animated spinners
 
 ## Installation
 
@@ -91,6 +93,20 @@ Available units:
 - `mbps` - megabits per second (default)
 - `gbps` - gigabits per second
 
+#### Test Duration
+
+Use the `--duration` or `-t` flag to specify how long each test should run (in seconds):
+
+```bash
+speedtest-cli start --duration 60   # Run each test for 60 seconds
+speedtest-cli download -t 15        # Run download test for 15 seconds
+speedtest-cli start                 # Default: 30 seconds per test
+```
+
+- Default: 30 seconds
+- Longer durations provide more accurate results
+- Each test (download and upload) runs for the specified duration
+
 #### Verbose Mode
 
 Enable detailed logging with the `--verbose` or `-v` flag:
@@ -103,7 +119,7 @@ speedtest-cli download -v
 ### Examples
 
 ```bash
-# Quick download test with default settings
+# Quick download test with default settings (30 seconds)
 speedtest-cli download
 
 # Full test showing results in Kbps
@@ -114,6 +130,15 @@ speedtest-cli upload -v
 
 # Download test in Gbps with debug info
 speedtest-cli download --unit gbps --verbose
+
+# 60-second test for more accurate results
+speedtest-cli start --duration 60
+
+# Quick 10-second download test in Mbps
+speedtest-cli download -t 10 -u mbps
+
+# Combined options: 45-second test with verbose logging
+speedtest-cli start --duration 45 --unit kbps --verbose
 ```
 
 ### Help
@@ -129,13 +154,18 @@ speedtest-cli upload --help
 ## Sample Output
 
 ```
-=> Running full speed test (download + upload)...
+⠹ Testing download speed - 45.23 Mbps
+✔ Testing download speed
+⠹ Testing upload speed - 24.87 Mbps
+✔ Testing upload speed
 
 Speed Test Results
 ===================
 Download Speed: 48.42 Mbps
 Upload Speed:   25.08 Mbps
 ```
+
+The spinner (⠹) animates while testing and shows real-time speed updates every 100ms. When complete, it displays a checkmark (✔).
 
 ## Requirements
 
@@ -149,14 +179,17 @@ Upload Speed:   25.08 Mbps
 - `reqwest` - HTTP client
 - `env_logger` & `log` - Logging
 - `colored` - Terminal colors
+- `indicatif` - Progress bars and spinners
 - `thiserror` - Error handling
 - `futures-util` - Async utilities
 
 ## How It Works
 
 The tool performs speed tests by:
-- **Download**: Downloading test files from reliable servers and measuring transfer rate
+- **Download**: Downloading test files from reliable servers and measuring transfer rate in real-time
 - **Upload**: Uploading data to test endpoints and measuring transfer rate
+- **Real-Time Updates**: Speed is calculated and displayed every 100ms during the test
+- **Multiple Fallbacks**: Automatically tries alternative servers if one fails
 
 Results are calculated in bytes per second and converted to your chosen unit.
 
@@ -240,11 +273,12 @@ Be respectful and constructive in all interactions. We're here to build somethin
 
 ## Roadmap
 
+- [x] Real-time progress indicators with animated spinners
 - [ ] Add server selection options
 - [ ] Support for latency/ping tests
 - [ ] JSON output format
 - [ ] Configuration file support
-- [ ] Progress bars for long tests
+- [ ] Historical test results tracking
 
 ---
 
